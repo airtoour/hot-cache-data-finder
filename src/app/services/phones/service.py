@@ -1,0 +1,54 @@
+import orjson
+
+from src.app.api.exceptions import AddressAlreadyExists
+from src.app.api.exceptions import AddressNotFound
+from src.app.schemas.addresses import AddressOut
+from src.app.schemas.addresses import PhoneAddressDataIn
+from src.app.schemas.addresses import PhoneAddressDataOut
+from src.app.services.cache.service import CacheService
+
+
+class PhonesService:
+    """Service for working with phones"""
+
+    def __init__(self, database: CacheService) -> None:
+        self.database = database
+
+        self.address_key: str = "phones:{phone}"
+        self.default_ttl_for_update: int = 86_400
+
+    async def address(self, phone: str) -> str:
+        """Get Address by Phone number"""
+
+        # Try to get data from cache
+        result = await self.database.get(key=self.address_key.format(phone=phone))
+
+        # If result not exists raise 404
+        if not result:
+            raise AddressNotFound()
+
+        # Return validated data
+        return AddressOut.model_validate(orjson.loads(result))
+
+    async def create(self, data: PhoneAddressDataIn) -> PhoneAddressDataOut:
+        """Create new Phone and Address"""
+
+        cache_key: str = self.address_key.format(phone_number=data.phone)
+
+        exists = await self.database.get(key=cache_key)
+
+        if exists:
+
+            # Обновляем TTL, хоть о нём и не говорилось в ТЗ, я бы тут уточнил требования
+            await self.database.update_ttl(key=cache_key, ttl=self.default_ttl_for_update)
+
+            # Обновляем само значение по номеру телефона
+            await self.database.update(key=cache_key, data=data)
+
+            # Либо возвращаем 409-ую
+            raise AddressAlreadyExists()
+
+        # Set new data in cache
+        await self.database.set(key=cache_key, data=data)
+
+        return PhoneAddressDataOut(message=f"Phone ({data.phone}) & Address ({data.address}) is successfully created")

@@ -1,0 +1,6 @@
+[flake8]
+max-line-length = 120
+ignore = F403,F405,W503,E704,E711,E712,E722,E501,E266,E702,E301,E701,E741,F811,I100,E203,I201,F824
+import-order-style = google
+application-import-names = src
+plugins = flake8-mypy
