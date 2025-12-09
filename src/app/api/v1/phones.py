@@ -27,3 +27,19 @@ async def create_phone_address(
     """Create new Phone and Address"""
 
     return await service.create(data=data)
+
+
+@router.put("/update", response_model=PhoneAddressDataOut, status_code=status.HTTP_200_OK)
+async def update_phone_address(
+    data: PhoneAddressDataIn, service: Annotated[PhonesService, Depends(phones_service)]
+) -> PhoneAddressDataOut:
+    """Update existing address by phone"""
+
+    return await service.update(data=data)
+
+
+@router.delete("/delete", response_model=bool, status_code=status.HTTP_204_NO_CONTENT)
+async def delete_phone_address(service: Annotated[PhonesService, Depends(phones_service)]) -> bool:
+    """Delete all old records from cache"""
+
+    return await service.delete()

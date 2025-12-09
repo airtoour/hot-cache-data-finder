@@ -21,3 +21,10 @@ class AddressAlreadyExists(BaseServerException):
 
     def __init__(self):
         super().__init__(status_code=status.HTTP_409_CONFLICT, detail="Address with phone already exists")
+
+
+class PhoneNotFound(BaseServerException):
+    """Custom exception if address not found"""
+
+    def __init__(self):
+        super().__init__(status_code=status.HTTP_404_NOT_FOUND, detail="Phone not found")

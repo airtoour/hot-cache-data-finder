@@ -2,6 +2,7 @@ import orjson
 
 from src.app.api.exceptions import AddressAlreadyExists
 from src.app.api.exceptions import AddressNotFound
+from src.app.api.exceptions import PhoneNotFound
 from src.app.schemas.addresses import AddressOut
 from src.app.schemas.addresses import PhoneAddressDataIn
 from src.app.schemas.addresses import PhoneAddressDataOut
@@ -33,9 +34,10 @@ class PhonesService:
     async def create(self, data: PhoneAddressDataIn) -> PhoneAddressDataOut:
         """Create new Phone and Address"""
 
+        # Init cache key
         cache_key: str = self.address_key.format(phone_number=data.phone)
 
-        exists = await self.database.get(key=cache_key)
+        exists = await self._exists(data.phone)
 
         if exists:
 
@@ -52,3 +54,30 @@ class PhonesService:
         await self.database.set(key=cache_key, data=data)
 
         return PhoneAddressDataOut(message=f"Phone ({data.phone}) & Address ({data.address}) is successfully created")
+
+    async def update(self, data: PhoneAddressDataIn) -> PhoneAddressDataOut:
+        """Update existing Address by Phone number"""
+
+        cache_key: str = self.address_key.format(phone_number=data.phone)
+
+        exists = await self._exists(cache_key=cache_key)
+
+        if not exists:
+            raise PhoneNotFound()
+
+        await self.database.update(key=cache_key, data=data)
+
+        return PhoneAddressDataOut(message=f"Address ({data.address}) is successfully updated")
+
+    async def delete(self) -> bool:
+        """Delete old rows from cache"""
+
+        return await self.database.drop_all_old_records()
+
+    async def _exists(self, cache_key: str) -> bool:
+        """Check if value exists in cache"""
+
+        # Try to get value from cache
+        exists = await self.database.get(key=cache_key)
+
+        return exists is not None
