@@ -36,7 +36,7 @@ class CacheService:
             logger.error(f"Error updating {key}: {e}")
             raise e
 
-    async def update(self, key: str, data: Any) -> None:
+    async def update(self, key: str, data: dict[str, Any]) -> None:
         """Update Value from cache by key"""
 
         try:
@@ -50,7 +50,7 @@ class CacheService:
             logger.error(f"Error updating {key}: {e}")
             raise e
 
-    async def set(self, key: str, data: Any) -> None:
+    async def set(self, key: str, data: dict[str, Any]) -> None:
         """Set Value from cache by key"""
 
         try:

@@ -27,8 +27,22 @@ class PhoneAddressDataIn(BaseModel):
 
         return value
 
+    @field_validator("address")
+    def validate_address(cls, value: str) -> str:  # noqa
+        """Validate address"""
+
+        if value == "string":
+            raise ValueError("Address must be in normal format")
+        return value
+
 
 class PhoneAddressDataOut(BaseModel):
     """Phone & Address Data out data"""
 
     message: str
+
+
+class AddressToDelete(BaseModel):
+    """Addresses to delete"""
+
+    phone: str

@@ -6,6 +6,7 @@ from fastapi import status
 
 from src.app.api.deps import phones_service
 from src.app.schemas.addresses import AddressOut
+from src.app.schemas.addresses import AddressToDelete
 from src.app.schemas.addresses import PhoneAddressDataIn
 from src.app.schemas.addresses import PhoneAddressDataOut
 from src.app.services.phones.service import PhonesService
@@ -38,8 +39,17 @@ async def update_phone_address(
     return await service.update(data=data)
 
 
-@router.delete("/delete", response_model=bool, status_code=status.HTTP_204_NO_CONTENT)
-async def delete_phone_address(service: Annotated[PhonesService, Depends(phones_service)]) -> bool:
+@router.delete("/delete", response_model=None, status_code=status.HTTP_204_NO_CONTENT)
+async def delete_phone_address(
+    data: AddressToDelete, service: Annotated[PhonesService, Depends(phones_service)]
+) -> None:
+    """Delete existing address by phone"""
+
+    return await service.delete(data=data)
+
+
+@router.delete("/delete/all", response_model=bool, status_code=status.HTTP_202_ACCEPTED)
+async def delete_all_phone_address(service: Annotated[PhonesService, Depends(phones_service)]) -> bool:
     """Delete all old records from cache"""
 
-    return await service.delete()
+    return await service.delete_all()

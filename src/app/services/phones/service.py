@@ -4,6 +4,7 @@ from src.app.api.exceptions import AddressAlreadyExists
 from src.app.api.exceptions import AddressNotFound
 from src.app.api.exceptions import PhoneNotFound
 from src.app.schemas.addresses import AddressOut
+from src.app.schemas.addresses import AddressToDelete
 from src.app.schemas.addresses import PhoneAddressDataIn
 from src.app.schemas.addresses import PhoneAddressDataOut
 from src.app.services.cache.service import CacheService
@@ -35,7 +36,7 @@ class PhonesService:
         """Create new Phone and Address"""
 
         # Init cache key
-        cache_key: str = self.address_key.format(phone_number=data.phone)
+        cache_key: str = self.address_key.format(phone=data.phone)
 
         exists = await self._exists(data.phone)
 
@@ -51,28 +52,33 @@ class PhonesService:
             raise AddressAlreadyExists()
 
         # Set new data in cache
-        await self.database.set(key=cache_key, data=data)
+        await self.database.set(key=cache_key, data=data.model_dump())
 
         return PhoneAddressDataOut(message=f"Phone ({data.phone}) & Address ({data.address}) is successfully created")
 
     async def update(self, data: PhoneAddressDataIn) -> PhoneAddressDataOut:
         """Update existing Address by Phone number"""
 
-        cache_key: str = self.address_key.format(phone_number=data.phone)
+        cache_key: str = self.address_key.format(phone=data.phone)
 
         exists = await self._exists(cache_key=cache_key)
 
         if not exists:
             raise PhoneNotFound()
 
-        await self.database.update(key=cache_key, data=data)
+        await self.database.update(key=cache_key, data=data.model_dump())
 
         return PhoneAddressDataOut(message=f"Address ({data.address}) is successfully updated")
 
-    async def delete(self) -> bool:
+    async def delete_all(self) -> bool:
         """Delete old rows from cache"""
 
         return await self.database.drop_all_old_records()
+
+    async def delete(self, data: AddressToDelete) -> None:
+        """Delete Address by Phone number"""
+
+        return await self.database.drop(data.phone)
 
     async def _exists(self, cache_key: str) -> bool:
         """Check if value exists in cache"""
